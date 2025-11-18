@@ -2,3 +2,15 @@ node_modules
 dist
 cache
 package-lock.json
+
+# Android build artifacts
+android/app/build/
+android/.gradle/
+android/build/
+android/.idea/
+android/local.properties
+*.apk
+*.aab
+
+# Capacitor
+.capacitor/
