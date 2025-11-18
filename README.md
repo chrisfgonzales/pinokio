@@ -2,6 +2,88 @@
 
 Launch Anything.
 
+# Building for Android
+
+Pinokio now supports Android! You can build an Android version of the app using Capacitor.
+
+## Prerequisites
+
+1. **Android Studio** - Download from [developer.android.com/studio](https://developer.android.com/studio)
+2. **Java JDK 17 or higher** - Required for Android builds
+3. **Android SDK** - Installed via Android Studio
+4. **Node.js and npm** - For building the project
+
+## Setup
+
+1. Install Android Studio and set up the Android SDK
+2. Set the `ANDROID_HOME` environment variable:
+   ```bash
+   export ANDROID_HOME=$HOME/Android/Sdk
+   export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+## Build Commands
+
+### Quick Build (Debug APK)
+```bash
+./android_build.sh
+```
+This creates a debug APK at: `android/app/build/outputs/apk/debug/app-debug.apk`
+
+### Alternative Build Commands
+
+```bash
+# Sync web assets to Android project
+npm run android:sync
+
+# Build debug APK
+npm run android:build
+
+# Build release APK (requires signing configuration)
+npm run android:build:release
+
+# Install debug APK on connected device
+npm run android:install
+
+# Run on Android emulator or device
+npm run android:run
+
+# Open Android project in Android Studio
+npm run android:open
+```
+
+## Release Build Configuration
+
+To create a signed release APK for distribution:
+
+1. Generate a keystore file:
+   ```bash
+   keytool -genkey -v -keystore pinokio-release.keystore -alias pinokio -keyalg RSA -keysize 2048 -validity 10000
+   ```
+
+2. Create `android/keystore.properties`:
+   ```properties
+   storeFile=/path/to/pinokio-release.keystore
+   storePassword=your_store_password
+   keyAlias=pinokio
+   keyPassword=your_key_password
+   ```
+
+3. Build the release APK:
+   ```bash
+   npm run android:build:release
+   ```
+
+## Notes
+
+- The Android app connects to the Pinokio server running on `localhost:42000`
+- For the app to work, you need to have the Pinokio server running on your device
+- The Android build uses Capacitor to wrap the web interface in a native Android app
+
 # Script Policy
 
 Pinokio is a 1-click launcher for any open-source project. Think of it as a terminal application with a user-friendly interface that can programmatically interact with scripts.

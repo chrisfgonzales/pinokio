@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Pinokio</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    
+    #splash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease-out;
+    }
+    
+    #splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    #splash img {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 20px;
+    }
+    
+    #splash h1 {
+      color: white;
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+    
+    #splash p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 16px;
+    }
+    
+    .loader {
+      margin-top: 20px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    #app-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none;
+    }
+    
+    #app-frame.ready {
+      display: block;
+    }
+    
+    #error-message {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      text-align: center;
+      z-index: 10000;
+    }
+    
+    #error-message.show {
+      display: block;
+    }
+    
+    #error-message h2 {
+      color: #e53e3e;
+      margin-bottom: 10px;
+    }
+    
+    #error-message p {
+      color: #4a5568;
+      margin-bottom: 20px;
+    }
+    
+    #error-message button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    
+    #error-message button:active {
+      background: #5568d3;
+    }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <img src="icon.png" alt="Pinokio" onerror="this.style.display='none'">
+    <h1>Pinokio</h1>
+    <p>Loading...</p>
+    <div class="loader"></div>
+  </div>
+  
+  <iframe id="app-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
+  
+  <div id="error-message">
+    <h2>Connection Error</h2>
+    <p>Unable to connect to Pinokio server. Please ensure the server is running.</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+
+  <script type="module">
+    // Initialize Capacitor
+    import { Capacitor } from '@capacitor/core';
+    
+    const SERVER_URL = 'http://localhost:42000';
+    const TIMEOUT_MS = 10000;
+    
+    async function checkServerAvailability() {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+        
+        const response = await fetch(SERVER_URL, {
+          signal: controller.signal,
+          mode: 'no-cors'
+        });
+        
+        clearTimeout(timeoutId);
+        return true;
+      } catch (error) {
+        console.error('Server check failed:', error);
+        return false;
+      }
+    }
+    
+    async function loadApp() {
+      const splash = document.getElementById('splash');
+      const appFrame = document.getElementById('app-frame');
+      const errorMessage = document.getElementById('error-message');
+      
+      // Check if server is available
+      const serverAvailable = await checkServerAvailability();
+      
+      if (!serverAvailable) {
+        splash.classList.add('hidden');
+        errorMessage.classList.add('show');
+        return;
+      }
+      
+      // Load the app in iframe
+      appFrame.src = SERVER_URL;
+      
+      // Wait for iframe to load
+      appFrame.onload = () => {
+        setTimeout(() => {
+          splash.classList.add('hidden');
+          appFrame.classList.add('ready');
+        }, 500);
+      };
+      
+      // Handle iframe load error
+      appFrame.onerror = () => {
+        splash.classList.add('hidden');
+        errorMessage.classList.add('show');
+      };
+    }
+    
+    // Start loading when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadApp);
+    } else {
+      loadApp();
+    }
+  </script>
+</body>
+</html>
